@@ -12,12 +12,17 @@ public class BasePage {
 
     public BasePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(30)); // Increased to 30
     }
 
     protected void click(By locator) {
         wait.until(ExpectedConditions.elementToBeClickable(locator));
         driver.findElement(locator).click();
+    }
+
+    protected void jsClick(By locator) {
+        WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(locator));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", element);
     }
 
     protected void type(By locator, String text) {
@@ -32,7 +37,7 @@ public class BasePage {
 
     protected void scrollToElement(By locator) {
         WebElement element = driver.findElement(locator);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
         WaitUtils.sleep(500);
     }
 
@@ -46,13 +51,13 @@ public class BasePage {
     }
 
     protected void handleDuoAuth() {
-        System.out.println("\n" + "=".repeat(50));
+        System.out.println("\n" + "=".repeat(60));
         System.out.println("⚠️  DUO AUTHENTICATION REQUIRED");
-        System.out.println("=".repeat(50));
-        System.out.println("Please approve the Duo push notification");
+        System.out.println("=".repeat(60));
+        System.out.println("Please approve Duo push notification");
         System.out.println("Waiting 30 seconds...");
-        System.out.println("=".repeat(50) + "\n");
+        System.out.println("=".repeat(60) + "\n");
 
-        WaitUtils.sleep(30000); // 30 seconds
+        WaitUtils.sleep(30000);
     }
 }

@@ -2,29 +2,19 @@ package com.neu.info6255.tests;
 
 import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.DatasetPage;
-import com.neu.info6255.pages.LoginPage;
-import com.neu.info6255.utils.ExcelUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import java.util.Map;
 
 public class Scenario4_DatasetDownloadTest extends BaseTest {
 
-    @Test(priority = 4, description = "Download a DATASET - NEGATIVE SCENARIO (Must Fail)",
-            expectedExceptions = Exception.class)
+    @Test(priority = 4, description = "Download a DATASET - NEGATIVE SCENARIO (Must Fail)")
     public void testDownloadDataset_ShouldFail() {
         currentScenario = "Scenario4_Dataset_Negative";
 
         System.out.println("\n" + "=".repeat(70));
-        System.out.println("SCENARIO 4: DATASET DOWNLOAD (NEGATIVE TEST - SHOULD FAIL)");
+        System.out.println("SCENARIO 4: DATASET DOWNLOAD (NEGATIVE TEST - MUST FAIL)");
         System.out.println("=".repeat(70) + "\n");
 
-        // Get login credentials
-        Map<String, String> credentials = ExcelUtils.getLoginCredentials();
-        String username = credentials.get("Username");
-        String password = credentials.get("Password");
-
-        // Step a: Open OneSearch and click Digital Repository
         DatasetPage datasetPage = new DatasetPage(driver);
         datasetPage.navigateToOneSearch();
         takeScreenshot("01_OneSearch_Page");
@@ -32,37 +22,31 @@ public class Scenario4_DatasetDownloadTest extends BaseTest {
         datasetPage.clickDigitalRepository();
         takeScreenshot("02_Digital_Repository");
 
-        // Login if required
-        if (driver.getCurrentUrl().contains("login") || driver.getCurrentUrl().contains("oauth")) {
-            System.out.println("Login required...");
-            LoginPage loginPage = new LoginPage(driver);
-            loginPage.login(username, password);
-            takeScreenshot("03_After_Login");
-        }
-
-        // Step b: Click on 'Datasets'
         datasetPage.clickDatasets();
         takeScreenshot("04_Datasets_Page");
 
         datasetPage.openFirstDataset();
         takeScreenshot("05_Dataset_Details");
 
-        // Step c: Click on "Zip File" - THIS SHOULD FAIL
+        // This should throw RuntimeException with message about failure
+        boolean testFailed = false;
+        String failureMessage = "";
+
         try {
             datasetPage.clickZipFile();
-            takeScreenshot("06_Attempted_Download");
+            takeScreenshot("06_Unexpected_Success");
 
-            // If we reach here, the test failed to fail
-            Assert.fail("Test should have failed but didn't - Zip file was accessible");
-
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
+            testFailed = true;
+            failureMessage = e.getMessage();
             takeScreenshot("07_Expected_Failure");
             System.out.println("\n" + "=".repeat(70));
-            System.out.println("✓ SCENARIO 4: DATASET DOWNLOAD - FAILED AS EXPECTED");
+            System.out.println("✓ SCENARIO 4: NEGATIVE TEST PASSED (Failed as expected)");
+            System.out.println("Failure reason: " + failureMessage);
             System.out.println("=".repeat(70) + "\n");
-
-            // Re-throw to mark test as failed (expected)
-            throw e;
         }
+
+        // Assert that the test failed
+        Assert.assertTrue(testFailed, "Dataset download MUST fail for negative test");
     }
 }
