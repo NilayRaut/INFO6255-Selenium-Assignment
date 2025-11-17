@@ -12,12 +12,12 @@ public class BasePage {
 
     public BasePage(WebDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(30)); // Increased to 30
+        this.wait = new WebDriverWait(driver, Duration.ofSeconds(20)); // Reduced from 30
     }
 
     protected void click(By locator) {
-        wait.until(ExpectedConditions.elementToBeClickable(locator));
-        driver.findElement(locator).click();
+        WebElement element = wait.until(ExpectedConditions.elementToBeClickable(locator));
+        element.click();
     }
 
     protected void jsClick(By locator) {
@@ -37,14 +37,17 @@ public class BasePage {
 
     protected void scrollToElement(By locator) {
         WebElement element = driver.findElement(locator);
-        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", element);
-        WaitUtils.sleep(500);
+        ((JavascriptExecutor) driver).executeScript(
+                "arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});",
+                element
+        );
+        WaitUtils.sleep(300); // Reduced from 500
     }
 
     protected void selectDropdown(By locator, String visibleText) {
         WebElement dropdown = wait.until(ExpectedConditions.elementToBeClickable(locator));
         dropdown.click();
-        WaitUtils.sleep(500);
+        WaitUtils.sleep(300); // Reduced from 500
 
         By optionLocator = By.xpath("//option[text()='" + visibleText + "']");
         click(optionLocator);
@@ -55,9 +58,19 @@ public class BasePage {
         System.out.println("⚠️  DUO AUTHENTICATION REQUIRED");
         System.out.println("=".repeat(60));
         System.out.println("Please approve Duo push notification");
-        System.out.println("Waiting 30 seconds...");
+        System.out.println("Waiting 25 seconds..."); // Reduced from 30
         System.out.println("=".repeat(60) + "\n");
 
-        WaitUtils.sleep(30000);
+        WaitUtils.sleep(25000); // Reduced from 30000
+    }
+
+    // Helper method to switch frames safely
+    protected void switchToFrameSafely(int frameIndex) {
+        try {
+            wait.withTimeout(Duration.ofSeconds(5))
+                    .until(ExpectedConditions.frameToBeAvailableAndSwitchToIt(frameIndex));
+        } catch (Exception e) {
+            throw new RuntimeException("Could not switch to frame " + frameIndex, e);
+        }
     }
 }

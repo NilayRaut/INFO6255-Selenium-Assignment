@@ -11,6 +11,11 @@ public class LoginPage extends BasePage {
     private By nextButton = By.id("idSIButton9");
     private By passwordField = By.name("passwd");
     private By signInButton = By.id("idSIButton9");
+
+    // Device trust options
+    private By otherDeviceButton = By.id("dont-trust-browser-button");
+
+    // Stay signed in
     private By staySignedInButton = By.id("idSIButton9");
 
     public LoginPage(WebDriver driver) {
@@ -53,20 +58,39 @@ public class LoginPage extends BasePage {
             System.out.println("✓ Sign in clicked");
             WaitUtils.sleep(5000);
 
-            // Step 5: Handle "Stay signed in?" prompt
-            System.out.println("\nStep 5: Checking for 'Stay signed in?' prompt...");
+            // Step 5: Handle "Is this your device?" prompt
+            System.out.println("\nStep 5: Checking for device trust prompt...");
             try {
-                if (driver.findElements(staySignedInButton).size() > 0) {
-                    System.out.println("Found 'Stay signed in?' prompt - clicking Yes");
-                    click(staySignedInButton);
+                if (driver.findElements(otherDeviceButton).size() > 0) {
+                    System.out.println("Found device trust prompt - clicking 'Other use my device'");
+                    click(otherDeviceButton);
+                    System.out.println("✓ 'Other use my device' clicked");
                     WaitUtils.sleep(3000);
+                } else {
+                    System.out.println("No device trust prompt found - continuing");
                 }
             } catch (Exception e) {
-                System.out.println("No 'Stay signed in?' prompt found - continuing");
+                System.out.println("No device trust prompt found - continuing");
             }
 
             // Step 6: Handle Duo authentication
             handleDuoAuth();
+
+            // Step 7: Handle "Stay signed in?" prompt
+            System.out.println("\nStep 7: Checking for 'Stay signed in?' prompt...");
+            try {
+                WaitUtils.sleep(2000); // Wait for page to load after Duo
+                if (driver.findElements(staySignedInButton).size() > 0) {
+                    System.out.println("Found 'Stay signed in?' prompt - clicking Yes");
+                    click(staySignedInButton);
+                    System.out.println("✓ 'Yes' clicked");
+                    WaitUtils.sleep(3000);
+                } else {
+                    System.out.println("No 'Stay signed in?' prompt found - continuing");
+                }
+            } catch (Exception e) {
+                System.out.println("No 'Stay signed in?' prompt found - continuing");
+            }
 
             System.out.println("\n" + "=".repeat(60));
             System.out.println("✅ Login Process Completed");

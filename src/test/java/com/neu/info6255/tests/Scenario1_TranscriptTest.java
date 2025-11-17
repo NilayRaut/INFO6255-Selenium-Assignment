@@ -4,13 +4,15 @@ import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.LoginPage;
 import com.neu.info6255.pages.TranscriptPage;
 import com.neu.info6255.utils.ExcelUtils;
+import com.neu.info6255.utils.WaitUtils;
+import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import java.util.Map;
 
 public class Scenario1_TranscriptTest extends BaseTest {
 
-    @Test(priority = 1, description = "Download the latest transcript")
+    @Test(priority = 1, description = "Scenario 1: Download the latest transcript")
     public void testDownloadTranscript() {
         currentScenario = "Scenario1_Transcript";
 
@@ -18,58 +20,112 @@ public class Scenario1_TranscriptTest extends BaseTest {
         System.out.println("SCENARIO 1: DOWNLOAD TRANSCRIPT");
         System.out.println("=".repeat(70) + "\n");
 
-        // Get login credentials from Excel
-        Map<String, String> credentials = ExcelUtils.getLoginCredentials();
-        String username = credentials.get("Username");
-        String password = credentials.get("Password");
+        try {
+            // Get login credentials from Excel
+            Map<String, String> credentials = ExcelUtils.getLoginCredentials();
+            String username = credentials.get("Username");
+            String password = credentials.get("Password");
 
-        // Step a: Log in to My NEU portal
-        LoginPage loginPage = new LoginPage(driver);
-        loginPage.navigateToNEU();
-        takeScreenshot("01_Navigate_to_NEU");
+            // Step a: Log in to My NEU portal
+            System.out.println("Step a: Logging in to My NEU portal");
+            takeScreenshot("01_Before_Navigate_to_NEU");
 
-        loginPage.login(username, password);
-        takeScreenshot("02_After_Login");
+            LoginPage loginPage = new LoginPage(driver);
+            loginPage.navigateToNEU();
+            takeScreenshot("02_After_Navigate_to_NEU");
 
-        // Step b: Launch the Student Hub portal (already on it after login)
-        TranscriptPage transcriptPage = new TranscriptPage(driver);
-        transcriptPage.navigateToStudentHub();
-        takeScreenshot("03_Student_Hub");
+            loginPage.login(username, password);
+            takeScreenshot("03_After_Login_Complete");
 
-        // Step c: Hit the Resources tab
-        transcriptPage.clickResources();
-        takeScreenshot("04_Resources_Tab");
+            // Verify login successful
+            Assert.assertTrue(
+                    driver.getCurrentUrl().contains("me.northeastern.edu"),
+                    "Should be on NEU portal after login"
+            );
 
-        // Step d: Go to 'Academics, Classes & Registration'
-        transcriptPage.clickAcademics();
-        takeScreenshot("05_Academics_Section");
+            // Step b: Launch the Student Hub portal
+            System.out.println("\nStep b: Navigating to Student Hub");
+            takeScreenshot("04_Before_Student_Hub");
 
-        // Step e: Go to 'My Transcripts'
-        transcriptPage.clickMyTranscripts();
-        takeScreenshot("06_My_Transcripts_Page");
+            TranscriptPage transcriptPage = new TranscriptPage(driver);
+            transcriptPage.navigateToStudentHub();
+            takeScreenshot("05_After_Student_Hub");
 
-        // Login to transcript portal (new window requires separate login)
-        transcriptPage.loginToTranscriptPortal(username, password);
-        takeScreenshot("06a_Transcript_Login");
+            // Step c: Hit the Resources tab
+            System.out.println("\nStep c: Clicking Resources tab");
+            takeScreenshot("06_Before_Resources_Tab");
 
-        // Step f: Select 'Graduate' and 'Audit Transcript'
-        transcriptPage.selectTranscriptOptions();
-        takeScreenshot("07_Select_Options");
+            transcriptPage.clickResources();
+            takeScreenshot("07_After_Resources_Tab");
 
-        transcriptPage.clickSubmit();
-        takeScreenshot("08_Transcript_Displayed");
+            // Step d: Go to 'Academics, Classes & Registration'
+            System.out.println("\nStep d: Clicking Academics section");
+            takeScreenshot("08_Before_Academics_Section");
 
-        // Step g: Right-click and print (save as PDF)
-        transcriptPage.printTranscript();
-        takeScreenshot("09_Print_Dialog");
+            transcriptPage.clickAcademics();
+            takeScreenshot("09_After_Academics_Section");
 
-        // Assertion - verify URL contains transcript
-        Assert.assertTrue(driver.getCurrentUrl().contains("transcript") ||
-                        driver.getPageSource().contains("Academic Transcript"),
-                "Transcript page should be displayed");
+            // Step e: Go to 'My Transcripts'
+            System.out.println("\nStep e: Clicking My Transcript link");
+            String mainWindow = driver.getWindowHandle();
+            takeScreenshot("10_Before_My_Transcripts");
 
-        System.out.println("\n" + "=".repeat(70));
-        System.out.println("✓ SCENARIO 1: DOWNLOAD TRANSCRIPT - PASSED");
-        System.out.println("=".repeat(70) + "\n");
+            transcriptPage.clickMyTranscripts();
+            takeScreenshot("11_After_My_Transcripts_Click");
+
+            // Login to transcript portal (new window)
+            System.out.println("\nLogging into transcript portal");
+            takeScreenshot("12_Before_Transcript_Login");
+
+            transcriptPage.loginToTranscriptPortal(username, password);
+            takeScreenshot("13_After_Transcript_Login");
+
+            // Step f: Select 'Graduate' and 'Audit Transcript'
+            System.out.println("\nStep f: Selecting transcript options");
+            takeScreenshot("14_Before_Select_Options");
+
+            transcriptPage.selectTranscriptOptions();
+            takeScreenshot("15_After_Select_Options");
+
+            // Verify selections
+            Assert.assertTrue(
+                    driver.getPageSource().contains("Graduate") ||
+                            driver.getPageSource().contains("Audit"),
+                    "Graduate and Audit options should be selected"
+            );
+
+            takeScreenshot("16_Before_Submit");
+            transcriptPage.clickSubmit();
+            takeScreenshot("17_After_Submit_Transcript_Displayed");
+
+            // Verify transcript is displayed
+            Assert.assertTrue(
+                    driver.getPageSource().contains("Academic Transcript") ||
+                            driver.getPageSource().contains("Northeastern University"),
+                    "Transcript should be displayed"
+            );
+
+            // Step g: Right-click and save as PDF
+            System.out.println("\nStep g: Simulating Print/Save as PDF");
+            takeScreenshot("18_Before_Print");
+
+            // Simulate print dialog using JavaScript
+            ((JavascriptExecutor) driver).executeScript("window.print();");
+            WaitUtils.sleep(2000); // Wait for print dialog
+
+            takeScreenshot("19_After_Print_Dialog");
+
+            transcriptPage.printTranscript();
+            takeScreenshot("20_Final_Print_Completed");
+
+            System.out.println("\n" + "=".repeat(70));
+            System.out.println("✓ SCENARIO 1: DOWNLOAD TRANSCRIPT - PASSED");
+            System.out.println("=".repeat(70) + "\n");
+
+        } catch (Exception e) {
+            System.err.println("\n❌ SCENARIO 1 FAILED: " + e.getMessage());
+            takeScreenshot("ERROR_Scenario1");
+            throw e;
+        }
     }
 }

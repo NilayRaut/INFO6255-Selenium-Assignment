@@ -1,22 +1,31 @@
 package com.neu.info6255.pages;
 
 import com.neu.info6255.utils.WaitUtils;
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.Select;
+import java.util.List;
 import java.util.Map;
 
 public class CanvasPage extends BasePage {
 
-    // Updated Locators from Selenium IDE recording
-    private By calendarIcon = By.cssSelector(".ic-icon-svg--calendar > path");
+    // Canvas Navigation - From Selenium IDE
+    private By calendarIcon = By.cssSelector(".ic-icon-svg--calendar");
     private By calendarLink = By.id("global_nav_calendar_link");
-    private By createEventButton = By.id("create_new_event_link");
-    private By eventTitleField = By.id("TextInput___0"); // Changes dynamically
-    private By moreLinkTextDateButton = By.cssSelector(".css-i2okqw-view--inlineBlock-baseButton");
-    private By locationField = By.id("TextInput___5"); // Changes dynamically
-    private By submitButton = By.id("edit-calendar-event-submit-button");
+
+    // Create Event - From Selenium IDE
     private By plusIcon = By.cssSelector(".icon-plus");
+
+    // Event Form Fields - Dynamic IDs, using more stable selectors
+    private By titleInput = By.cssSelector("input[placeholder*='Event Title']");
+    private By dateInput = By.cssSelector("input[value*='2025']");
+    private By fromTimeInput = By.cssSelector("input[placeholder='Start Time']");
+    private By toTimeInput = By.cssSelector("input[placeholder='End Time']");
+    private By locationInput = By.cssSelector("input[placeholder*='Location']");
+    private By calendarDropdown = By.cssSelector("select");
+
+    // Submit button
+    private By submitButton = By.xpath("//button[contains(text(), 'Submit')]");
 
     public CanvasPage(WebDriver driver) {
         super(driver);
@@ -24,80 +33,266 @@ public class CanvasPage extends BasePage {
 
     public void navigateToCanvas() {
         driver.get("https://northeastern.instructure.com");
-        System.out.println("Navigated to Canvas");
+        System.out.println("Navigated to Canvas: https://northeastern.instructure.com");
+        WaitUtils.sleep(2000);
     }
 
     public void openCalendar() {
-        System.out.println("Opening Calendar...");
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("Opening Canvas Calendar...");
+        System.out.println("=".repeat(60));
 
         try {
-            // Click calendar icon
+            WaitUtils.sleep(2000);
+
+            // Click calendar icon (from Selenium IDE recording)
             waitForElement(calendarIcon);
             click(calendarIcon);
+            System.out.println("✓ Clicked Calendar icon");
+
             WaitUtils.sleep(3000);
+            System.out.println("Current URL: " + driver.getCurrentUrl());
+            System.out.println("✓ Calendar page opened");
+
         } catch (Exception e) {
-            System.out.println("Trying alternative calendar link...");
-            click(calendarLink);
-            WaitUtils.sleep(3000);
+            System.out.println("❌ Error opening calendar: " + e.getMessage());
+            throw e;
         }
     }
 
     public void clickAddEvent() {
-        System.out.println("Clicking Create Event...");
+        System.out.println("\n--- Clicking Create Event (Plus Icon) ---");
 
         try {
-            waitForElement(plusIcon);
-            click(plusIcon);
-        } catch (Exception e) {
-            click(createEventButton);
-        }
+            WaitUtils.sleep(2000);
 
-        WaitUtils.sleep(2000);
+            // Hover over plus icon (like in Selenium IDE)
+            WebElement plusElement = driver.findElement(plusIcon);
+            Actions actions = new Actions(driver);
+            actions.moveToElement(plusElement).perform();
+            System.out.println("✓ Hovered over plus icon");
+
+            WaitUtils.sleep(500);
+
+            // Click the plus icon
+            plusElement.click();
+            System.out.println("✓ Clicked plus icon to create event");
+
+            WaitUtils.sleep(2000);
+
+        } catch (Exception e) {
+            System.out.println("❌ Error clicking add event: " + e.getMessage());
+
+            // Try JavaScript click as fallback
+            try {
+                WebElement plusElement = driver.findElement(plusIcon);
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", plusElement);
+                System.out.println("✓ Clicked using JavaScript");
+                WaitUtils.sleep(2000);
+            } catch (Exception ex) {
+                throw e;
+            }
+        }
     }
 
     public void createEvent(Map<String, String> eventData) {
-        System.out.println("Creating event: " + eventData.get("Title"));
+        System.out.println("\n" + "=".repeat(60));
+        System.out.println("Filling Event Form");
+        System.out.println("=".repeat(60));
 
         try {
-            // Enter title - find the first visible TextInput
-            driver.findElement(By.cssSelector("input[placeholder*='Event']")).sendKeys(eventData.get("Title"));
-            System.out.println("Entered title");
-            WaitUtils.sleep(1000);
+            WaitUtils.sleep(1500);
 
-            // Click "More Link Text Date" button to expand date options
+            // 1. Enter Title
+            System.out.println("\n1. Entering Title: " + eventData.get("Title"));
             try {
-                click(moreLinkTextDateButton);
-                WaitUtils.sleep(1000);
+                WebElement titleField = findFirstVisibleInput("Event Title", "Title", "title");
+                titleField.clear();
+                titleField.sendKeys(eventData.get("Title"));
+                System.out.println("   ✓ Title entered");
+                WaitUtils.sleep(500);
             } catch (Exception e) {
-                System.out.println("Date options already expanded");
+                System.out.println("   ⚠️  Could not enter title: " + e.getMessage());
             }
 
-            // Select date and time (using the date from Excel)
-            // Note: This is simplified - actual implementation would need date parsing
-
-            // Enter location
+            // 2. Enter Date
+            System.out.println("\n2. Entering Date: " + eventData.get("Date"));
             try {
-                driver.findElement(By.cssSelector("input[placeholder*='ocation']")).sendKeys(eventData.get("Location"));
-                System.out.println("Entered location");
+                // Find date input field
+                WebElement dateField = findFirstVisibleInput("date", "Date");
+                dateField.clear();
+                // Canvas expects format like "Mon, Nov 17, 2025" or "11/20/2025"
+                dateField.sendKeys(eventData.get("Date"));
+                dateField.sendKeys(Keys.TAB); // Move to next field
+                System.out.println("   ✓ Date entered");
+                WaitUtils.sleep(500);
             } catch (Exception e) {
-                System.out.println("Could not enter location");
+                System.out.println("   ⚠️  Could not enter date: " + e.getMessage());
             }
 
-            WaitUtils.sleep(1000);
+            // 3. Enter Start Time (From)
+            System.out.println("\n3. Entering Start Time: " + eventData.get("StartTime"));
+            try {
+                WebElement startField = findFirstVisibleInput("Start Time", "From");
+                startField.clear();
+                startField.sendKeys(eventData.get("StartTime"));
+                startField.sendKeys(Keys.TAB);
+                System.out.println("   ✓ Start time entered");
+                WaitUtils.sleep(500);
+            } catch (Exception e) {
+                System.out.println("   ⚠️  Could not enter start time: " + e.getMessage());
+            }
+
+            // 4. Enter End Time (To)
+            System.out.println("\n4. Entering End Time: " + eventData.get("EndTime"));
+            try {
+                WebElement endField = findFirstVisibleInput("End Time", "To");
+                endField.clear();
+                endField.sendKeys(eventData.get("EndTime"));
+                endField.sendKeys(Keys.TAB);
+                System.out.println("   ✓ End time entered");
+                WaitUtils.sleep(500);
+            } catch (Exception e) {
+                System.out.println("   ⚠️  Could not enter end time: " + e.getMessage());
+            }
+
+            // 5. Enter Location
+            System.out.println("\n5. Entering Location: " + eventData.get("Location"));
+            try {
+                WebElement locField = findFirstVisibleInput("Location", "location");
+                locField.clear();
+                locField.sendKeys(eventData.get("Location"));
+                System.out.println("   ✓ Location entered");
+                WaitUtils.sleep(500);
+            } catch (Exception e) {
+                System.out.println("   ⚠️  Could not enter location: " + e.getMessage());
+            }
+
+            // 6. Enter Details (if provided)
+            if (eventData.containsKey("Details") && eventData.get("Details") != null &&
+                    !eventData.get("Details").isEmpty()) {
+                System.out.println("\n6. Entering Details: " + eventData.get("Details"));
+                try {
+                    // Find textarea or details field
+                    List<WebElement> textareas = driver.findElements(By.tagName("textarea"));
+                    if (textareas.size() > 0) {
+                        WebElement detailsField = textareas.get(0);
+                        if (detailsField.isDisplayed() && detailsField.isEnabled()) {
+                            detailsField.clear();
+                            detailsField.sendKeys(eventData.get("Details"));
+                            System.out.println("   ✓ Details entered");
+                        }
+                    }
+                    WaitUtils.sleep(500);
+                } catch (Exception e) {
+                    System.out.println("   ⚠️  Details field not available");
+                }
+            }
+
+            System.out.println("\n" + "=".repeat(60));
+            System.out.println("✓ Event form filled successfully");
+            System.out.println("=".repeat(60));
 
         } catch (Exception e) {
-            System.out.println("Error creating event: " + e.getMessage());
+            System.out.println("\n❌ Error filling event form: " + e.getMessage());
+
+            // Debug: Print all input fields
+            System.out.println("\nDEBUG: Available input fields:");
+            List<WebElement> inputs = driver.findElements(By.tagName("input"));
+            for (int i = 0; i < inputs.size(); i++) {
+                WebElement input = inputs.get(i);
+                System.out.println("Input " + i + ": placeholder='" + input.getAttribute("placeholder") +
+                        "', type='" + input.getAttribute("type") + "'");
+            }
+
+            throw e;
         }
     }
 
     public void submitEvent() {
-        System.out.println("Submitting event...");
+        System.out.println("\n--- Submitting Event ---");
 
         try {
-            click(submitButton);
+            WaitUtils.sleep(1000);
+
+            // Try to find Submit button
+            By[] submitLocators = {
+                    By.xpath("//button[contains(text(), 'Submit')]"),
+                    By.cssSelector("button[type='submit']"),
+                    By.xpath("//button[contains(@class, 'Button--primary')]"),
+                    By.xpath("//button[contains(., 'Submit')]")
+            };
+
+            boolean submitted = false;
+            for (By locator : submitLocators) {
+                try {
+                    List<WebElement> buttons = driver.findElements(locator);
+                    if (buttons.size() > 0) {
+                        WebElement submitBtn = buttons.get(0);
+                        if (submitBtn.isDisplayed() && submitBtn.isEnabled()) {
+                            // Use JavaScript click for reliability
+                            ((JavascriptExecutor) driver).executeScript("arguments[0].click();", submitBtn);
+                            System.out.println("✓ Clicked Submit button");
+                            submitted = true;
+                            break;
+                        }
+                    }
+                } catch (Exception e) {
+                    continue;
+                }
+            }
+
+            if (!submitted) {
+                System.out.println("⚠️  Submit button not found - checking all buttons");
+                List<WebElement> allButtons = driver.findElements(By.tagName("button"));
+                System.out.println("Found " + allButtons.size() + " total buttons");
+                for (int i = 0; i < Math.min(allButtons.size(), 5); i++) {
+                    WebElement btn = allButtons.get(i);
+                    System.out.println("Button " + i + ": text='" + btn.getText() + "'");
+                }
+            }
+
             WaitUtils.sleep(3000);
+            System.out.println("✓ Event submitted");
+
         } catch (Exception e) {
-            System.out.println("Error submitting event: " + e.getMessage());
+            System.out.println("❌ Error submitting event: " + e.getMessage());
+            throw e;
         }
+    }
+
+    /**
+     * Helper method to find first visible input field matching any of the keywords
+     */
+    private WebElement findFirstVisibleInput(String... keywords) {
+        List<WebElement> inputs = driver.findElements(By.tagName("input"));
+
+        for (WebElement input : inputs) {
+            try {
+                if (!input.isDisplayed() || !input.isEnabled()) {
+                    continue;
+                }
+
+                String placeholder = input.getAttribute("placeholder");
+                String ariaLabel = input.getAttribute("aria-label");
+                String id = input.getAttribute("id");
+                String name = input.getAttribute("name");
+
+                // Check if any keyword matches
+                for (String keyword : keywords) {
+                    String lowerKeyword = keyword.toLowerCase();
+                    if ((placeholder != null && placeholder.toLowerCase().contains(lowerKeyword)) ||
+                            (ariaLabel != null && ariaLabel.toLowerCase().contains(lowerKeyword)) ||
+                            (id != null && id.toLowerCase().contains(lowerKeyword)) ||
+                            (name != null && name.toLowerCase().contains(lowerKeyword))) {
+                        return input;
+                    }
+                }
+            } catch (Exception e) {
+                continue;
+            }
+        }
+
+        throw new NoSuchElementException("No visible input found for keywords: " + String.join(", ", keywords));
     }
 }
