@@ -2,70 +2,95 @@ package com.neu.info6255.tests;
 
 import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.LibraryPage;
-import com.neu.info6255.pages.LoginPage;
-import com.neu.info6255.utils.ExcelUtils;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-import java.util.Map;
 
 public class Scenario3_LibraryReservationTest extends BaseTest {
 
-    @Test(priority = 3, description = "Reserve a spot in Snell Library")
-    public void testReserveLibrarySpot() {
-        currentScenario = "Scenario3_LibraryReservation";
+    @Test(priority = 3, description = "Scenario 3: Reserve a spot in Snell Library")
+    public void testReserveLibraryRoom() {
+        currentScenario = "Scenario3_LibraryRoom";
 
         System.out.println("\n" + "=".repeat(70));
-        System.out.println("SCENARIO 3: LIBRARY ROOM RESERVATION");
+        System.out.println("SCENARIO 3: RESERVE LIBRARY STUDY ROOM");
         System.out.println("=".repeat(70) + "\n");
 
-        // Get login credentials
-        Map<String, String> credentials = ExcelUtils.getLoginCredentials();
-        String username = credentials.get("Username");
-        String password = credentials.get("Password");
+        try {
+            LibraryPage libraryPage = new LibraryPage(driver);
 
-        // Step a: Open library website
-        LibraryPage libraryPage = new LibraryPage(driver);
-        libraryPage.navigateToLibrary();
-        takeScreenshot("01_Library_Homepage");
+            // Step a: Open library website
+            System.out.println("Step a: Opening Library Website");
+            takeScreenshot("01_Before_Navigate_Library");
 
-        // Step b: Select 'Reserve a Study Room'
-        libraryPage.clickReserveStudyRoom();
-        takeScreenshot("02_Reserve_Study_Room_Page");
+            libraryPage.navigateToLibrary();
+            takeScreenshot("02_After_Navigate_Library");
 
-        // Step c: Select 'Boston'
-        libraryPage.selectBoston();
-        takeScreenshot("03_Boston_Selected");
+            // Verify on library page
+            Assert.assertTrue(
+                    driver.getCurrentUrl().contains("library.northeastern.edu"),
+                    "Should be on library website"
+            );
 
-        // Step d: Click on 'Book a Room'
-        libraryPage.clickBookRoom();
-        takeScreenshot("04_Book_Room_Page");
+            // Step b: Click 'Reserve a Study Room'
+            System.out.println("\nStep b: Clicking 'Reserve a Study Room'");
+            takeScreenshot("03_Before_Reserve_Link");
 
-        // Login if required
-        if (driver.getCurrentUrl().contains("login") || driver.getCurrentUrl().contains("oauth")) {
-            System.out.println("Login required for library booking...");
-            LoginPage loginPage = new LoginPage(driver);
-            loginPage.login(username, password);
-            takeScreenshot("05_After_Login");
+            libraryPage.clickReserveStudyRoom();
+            takeScreenshot("04_After_Reserve_Link");
+
+            // Step c: Select 'Boston'
+            System.out.println("\nStep c: Selecting Boston location");
+            takeScreenshot("05_Before_Select_Boston");
+
+            libraryPage.selectBoston();
+            takeScreenshot("06_After_Select_Boston");
+
+            // Step d: Click 'Book a Room'
+            System.out.println("\nStep d: Clicking 'Book a Room'");
+            takeScreenshot("07_Before_Book_Room");
+
+            libraryPage.clickBookRoom();
+            takeScreenshot("08_After_Book_Room");
+
+            // Verify on booking page
+            Assert.assertTrue(
+                    driver.getCurrentUrl().contains("libcal") ||
+                            driver.getPageSource().contains("Book a Room"),
+                    "Should be on room booking page"
+            );
+
+            // Step e: Select 'Individual Study'
+            System.out.println("\nStep e: Selecting 'Individual Study'");
+            takeScreenshot("09_Before_Select_SeatStyle");
+
+            libraryPage.selectSeatStyle();
+            takeScreenshot("10_After_Select_SeatStyle");
+
+            // Step e continued: Select 'Space For 1-4 people'
+            System.out.println("\nStep e (continued): Selecting capacity");
+            takeScreenshot("11_Before_Select_Capacity");
+
+            libraryPage.selectCapacity();
+            takeScreenshot("12_After_Select_Capacity");
+
+            // Step f: Scroll down to view available rooms
+            System.out.println("\nStep f: Scrolling to view rooms");
+            takeScreenshot("13_Before_Scroll");
+
+            libraryPage.scrollToBottom();
+            takeScreenshot("14_After_Scroll_Rooms_Visible");
+
+            // Verify rooms are displayed
+            libraryPage.verifyRoomsDisplayed();
+
+            System.out.println("\n" + "=".repeat(70));
+            System.out.println("✅ SCENARIO 3: LIBRARY ROOM RESERVATION - PASSED");
+            System.out.println("=".repeat(70) + "\n");
+
+        } catch (Exception e) {
+            System.err.println("\n❌ SCENARIO 3 FAILED: " + e.getMessage());
+            takeScreenshot("ERROR_Scenario3");
+            throw e;
         }
-
-        // Step e: Select seat style and capacity
-        libraryPage.selectSeatStyle();
-        takeScreenshot("06_Seat_Style_Selected");
-
-        libraryPage.selectCapacity();
-        takeScreenshot("07_Capacity_Selected");
-
-        // Step f: Scroll down to end of page
-        libraryPage.scrollToBottom();
-        takeScreenshot("08_Scrolled_to_Bottom");
-
-        // Assertion - verify filtering options applied
-        Assert.assertTrue(driver.getPageSource().contains("Individual Study") ||
-                        driver.getPageSource().contains("Space for"),
-                "Study room filters should be applied");
-
-        System.out.println("\n" + "=".repeat(70));
-        System.out.println("✓ SCENARIO 3: LIBRARY RESERVATION - PASSED");
-        System.out.println("=".repeat(70) + "\n");
     }
 }
