@@ -2,9 +2,9 @@ package com.neu.info6255.utils;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class ExcelUtils {
@@ -13,7 +13,6 @@ public class ExcelUtils {
 
     /**
      * Get login credentials from LoginData sheet
-     * Returns the FIRST row with full email (for NEU login)
      */
     public static Map<String, String> getLoginCredentials() {
         Map<String, String> credentials = new HashMap<>();
@@ -23,16 +22,14 @@ public class ExcelUtils {
 
             Sheet sheet = workbook.getSheet("LoginData");
             if (sheet == null) {
-                throw new RuntimeException("LoginData sheet not found in Excel file");
+                throw new RuntimeException("LoginData sheet not found");
             }
 
-            // Get header row
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) {
-                throw new RuntimeException("Header row not found in LoginData sheet");
+                throw new RuntimeException("Header row not found");
             }
 
-            // Find column indices
             int usernameCol = -1;
             int passwordCol = -1;
 
@@ -49,7 +46,6 @@ public class ExcelUtils {
                 throw new RuntimeException("Username or Password column not found");
             }
 
-            // Get FIRST data row only (row 1, which has full email)
             Row dataRow = sheet.getRow(1);
             if (dataRow == null) {
                 throw new RuntimeException("No login data found");
@@ -64,7 +60,7 @@ public class ExcelUtils {
             System.out.println("✓ Loaded credentials for: " + username);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error reading Excel file: " + e.getMessage(), e);
+            throw new RuntimeException("Error reading Excel: " + e.getMessage(), e);
         }
 
         return credentials;
@@ -81,22 +77,19 @@ public class ExcelUtils {
 
             Sheet sheet = workbook.getSheet(sheetName);
             if (sheet == null) {
-                throw new RuntimeException(sheetName + " sheet not found in Excel file");
+                throw new RuntimeException(sheetName + " sheet not found");
             }
 
-            // Get header row
             Row headerRow = sheet.getRow(0);
             if (headerRow == null) {
                 throw new RuntimeException("Header row not found in " + sheetName);
             }
 
-            // Get all headers
             List<String> headers = new ArrayList<>();
             for (Cell cell : headerRow) {
                 headers.add(cell.getStringCellValue().trim());
             }
 
-            // Read all data rows
             for (int i = 1; i <= sheet.getLastRowNum(); i++) {
                 Row row = sheet.getRow(i);
                 if (row == null || isRowEmpty(row)) {
@@ -116,14 +109,14 @@ public class ExcelUtils {
             System.out.println("✓ Loaded " + testDataList.size() + " rows from " + sheetName);
 
         } catch (IOException e) {
-            throw new RuntimeException("Error reading Excel file: " + e.getMessage(), e);
+            throw new RuntimeException("Error reading Excel: " + e.getMessage(), e);
         }
 
         return testDataList;
     }
 
     /**
-     * Get cell value as String regardless of cell type
+     * Get cell value as String - HANDLES DATES AND TIMES PROPERLY
      */
     private static String getCellValueAsString(Cell cell) {
         if (cell == null) {
@@ -133,19 +126,46 @@ public class ExcelUtils {
         switch (cell.getCellType()) {
             case STRING:
                 return cell.getStringCellValue().trim();
+
             case NUMERIC:
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    return cell.getDateCellValue().toString();
+                    // Handle date/time cells
+                    Date dateValue = cell.getDateCellValue();
+
+                    // Get the format string from the cell
+                    String formatString = cell.getCellStyle().getDataFormatString();
+
+                    // Determine if it's a date or time based on format
+                    if (formatString.contains("h") || formatString.contains("m") ||
+                            formatString.contains("AM") || formatString.contains("PM")) {
+                        // It's a time field
+                        SimpleDateFormat timeFormat = new SimpleDateFormat("h:mm a");
+                        return timeFormat.format(dateValue);
+                    } else {
+                        // It's a date field
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+                        return dateFormat.format(dateValue);
+                    }
                 } else {
-                    // Format number without scientific notation
-                    return String.valueOf((long) cell.getNumericCellValue());
+                    // Regular number
+                    double numValue = cell.getNumericCellValue();
+                    // Check if it's a whole number
+                    if (numValue == (long) numValue) {
+                        return String.valueOf((long) numValue);
+                    } else {
+                        return String.valueOf(numValue);
+                    }
                 }
+
             case BOOLEAN:
                 return String.valueOf(cell.getBooleanCellValue());
+
             case FORMULA:
                 return cell.getCellFormula();
+
             case BLANK:
                 return "";
+
             default:
                 return "";
         }

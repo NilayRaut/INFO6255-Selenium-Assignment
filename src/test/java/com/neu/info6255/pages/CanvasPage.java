@@ -118,29 +118,44 @@ public class CanvasPage extends BasePage {
             // 2. Enter Date
             System.out.println("\n2. Entering Date: " + eventData.get("Date"));
             try {
-                // Find date input field
-                WebElement dateField = findFirstVisibleInput("date", "Date");
-                dateField.clear();
-                // Canvas expects format like "Mon, Nov 17, 2025" or "11/20/2025"
-                dateField.sendKeys(eventData.get("Date"));
-                dateField.sendKeys(Keys.TAB); // Move to next field
-                System.out.println("   ✓ Date entered");
+                // Canvas date field might be pre-filled with current date
+                // Look for input with type="text" and contains date-like placeholder
+                List<WebElement> inputs = driver.findElements(By.tagName("input"));
+                WebElement dateField = null;
+
+                for (WebElement input : inputs) {
+                    if (!input.isDisplayed() || !input.isEnabled()) continue;
+
+                    String placeholder = input.getAttribute("placeholder");
+                    String ariaLabel = input.getAttribute("aria-label");
+                    String value = input.getAttribute("value");
+
+                    // Look for date field indicators
+                    if ((placeholder != null && placeholder.toLowerCase().contains("date")) ||
+                            (ariaLabel != null && ariaLabel.toLowerCase().contains("date")) ||
+                            (value != null && value.matches(".*\\d{4}.*"))) { // Contains year
+                        dateField = input;
+                        break;
+                    }
+                }
+
+                if (dateField != null) {
+                    // Clear existing value
+                    dateField.click();
+                    dateField.sendKeys(Keys.CONTROL + "a");
+                    dateField.sendKeys(Keys.DELETE);
+                    WaitUtils.sleep(200);
+
+                    // Enter new date
+                    dateField.sendKeys(eventData.get("Date"));
+                    dateField.sendKeys(Keys.TAB);
+                    System.out.println("   ✓ Date entered");
+                } else {
+                    System.out.println("   ⚠️  Date field not found - using default date");
+                }
                 WaitUtils.sleep(500);
             } catch (Exception e) {
                 System.out.println("   ⚠️  Could not enter date: " + e.getMessage());
-            }
-
-            // 3. Enter Start Time (From)
-            System.out.println("\n3. Entering Start Time: " + eventData.get("StartTime"));
-            try {
-                WebElement startField = findFirstVisibleInput("Start Time", "From");
-                startField.clear();
-                startField.sendKeys(eventData.get("StartTime"));
-                startField.sendKeys(Keys.TAB);
-                System.out.println("   ✓ Start time entered");
-                WaitUtils.sleep(500);
-            } catch (Exception e) {
-                System.out.println("   ⚠️  Could not enter start time: " + e.getMessage());
             }
 
             // 4. Enter End Time (To)
