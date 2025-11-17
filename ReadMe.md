@@ -181,7 +181,7 @@ INFO6255-Selenium-Assignment/
 
 ### 1. Clone/Download the Project
 ```bash
-cd "E:\NEU Semesters\Fall2025_Semester_4\INFO_6255_Software_Quality_Control\Assignment\Selenium\INFO6255-Selenium-Assignment"
+cd "\INFO6255-Selenium-Assignment"
 ```
 
 ### 2. Install Dependencies
