@@ -4,6 +4,7 @@ import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.CalendarPage;
 import com.neu.info6255.pages.LoginPage;
 import com.neu.info6255.utils.ExcelUtils;
+import com.neu.info6255.utils.TestReporter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import java.util.Map;
@@ -107,12 +108,27 @@ public class Scenario5_AcademicCalendarTest extends BaseTest {
 
             takeScreenshot("19_Final_Success");
 
+            TestReporter.addResult(
+                    "Scenario 5: Update Academic Calendar",
+                    "Calendar checkbox unchecked and 'Add to My Calendar' button displayed",
+                    "Calendar filter unchecked successfully, on Academic Calendar page",
+                    "PASS"
+            );
+
             System.out.println("\n" + "=".repeat(70));
             System.out.println("✅ SCENARIO 5: ACADEMIC CALENDAR UPDATE - PASSED");
             System.out.println("=".repeat(70) + "\n");
 
         } catch (Exception e) {
             System.err.println("\n❌ SCENARIO 5 FAILED: " + e.getMessage());
+
+            TestReporter.addResult(
+                    "Scenario 5: Update Academic Calendar",
+                    "Calendar checkbox unchecked and 'Add to My Calendar' button displayed",
+                    "Error: " + e.getMessage(),
+                    "FAIL"
+            );
+
             takeScreenshot("ERROR_Scenario5");
             throw e;
         }

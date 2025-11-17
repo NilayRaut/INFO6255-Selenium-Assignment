@@ -1,20 +1,30 @@
 package com.neu.info6255.base;
 
 import com.neu.info6255.utils.ScreenshotUtils;
+import com.neu.info6255.utils.TestReporter;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.ITestResult;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.*;
 import java.time.Duration;
 
 public class BaseTest {
     protected WebDriver driver;
     protected WebDriverWait wait;
     protected String currentScenario;
+
+    @BeforeSuite
+    public void suiteSetup() {
+        System.out.println("\n" + "=".repeat(70));
+        System.out.println("🚀 STARTING TEST SUITE - INFO6255 Selenium Project");
+        System.out.println("=".repeat(70) + "\n");
+
+        // Clear previous test results
+        TestReporter.clearResults();
+    }
 
     @BeforeMethod
     public void setUp() {
@@ -55,6 +65,16 @@ public class BaseTest {
             System.out.println("Closing browser...");
             driver.quit();
         }
+    }
+
+    @AfterSuite
+    public void suiteCleanup() {
+        System.out.println("\n" + "=".repeat(70));
+        System.out.println("🏁 TEST SUITE COMPLETED");
+        System.out.println("=".repeat(70) + "\n");
+
+        // Generate HTML report
+        TestReporter.generateHTMLReport();
     }
 
     protected void takeScreenshot(String step) {

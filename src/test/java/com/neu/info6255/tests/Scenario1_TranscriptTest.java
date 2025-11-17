@@ -4,6 +4,7 @@ import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.LoginPage;
 import com.neu.info6255.pages.TranscriptPage;
 import com.neu.info6255.utils.ExcelUtils;
+import com.neu.info6255.utils.TestReporter;
 import com.neu.info6255.utils.WaitUtils;
 import org.openqa.selenium.JavascriptExecutor;
 import org.testng.Assert;
@@ -118,6 +119,13 @@ public class Scenario1_TranscriptTest extends BaseTest {
             transcriptPage.printTranscript();
             takeScreenshot("20_Final_Print_Completed");
 
+            TestReporter.addResult(
+                    "Scenario 1: Download Transcript",
+                    "Transcript should be displayed and ready for download",
+                    "Transcript displayed successfully, ready for print/save as PDF",
+                    "PASS"
+            );
+
             System.out.println("\n" + "=".repeat(70));
             System.out.println("✓ SCENARIO 1: DOWNLOAD TRANSCRIPT - PASSED");
             System.out.println("=".repeat(70) + "\n");
@@ -125,6 +133,12 @@ public class Scenario1_TranscriptTest extends BaseTest {
         } catch (Exception e) {
             System.err.println("\n❌ SCENARIO 1 FAILED: " + e.getMessage());
             takeScreenshot("ERROR_Scenario1");
+            TestReporter.addResult(
+                    "Scenario 1: Download Transcript",
+                    "Transcript should be displayed and ready for download",
+                    "Error occurred: " + e.getMessage(),
+                    "FAIL"
+            );
             throw e;
         }
     }

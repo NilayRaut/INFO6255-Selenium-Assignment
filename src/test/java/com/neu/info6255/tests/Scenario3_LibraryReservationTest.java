@@ -2,6 +2,7 @@ package com.neu.info6255.tests;
 
 import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.LibraryPage;
+import com.neu.info6255.utils.TestReporter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -83,12 +84,26 @@ public class Scenario3_LibraryReservationTest extends BaseTest {
             // Verify rooms are displayed
             libraryPage.verifyRoomsDisplayed();
 
+            TestReporter.addResult(
+                    "Scenario 3: Reserve Library Study Room",
+                    "Booking filters applied (Individual Study, 1-4 people) and rooms displayed",
+                    "Filters applied successfully, available study rooms visible",
+                    "PASS"
+            );
+
             System.out.println("\n" + "=".repeat(70));
             System.out.println("✅ SCENARIO 3: LIBRARY ROOM RESERVATION - PASSED");
             System.out.println("=".repeat(70) + "\n");
 
         } catch (Exception e) {
             System.err.println("\n❌ SCENARIO 3 FAILED: " + e.getMessage());
+
+            TestReporter.addResult(
+                    "Scenario 3: Reserve Library Study Room",
+                    "Booking filters applied (Individual Study, 1-4 people) and rooms displayed",
+                    "Error: " + e.getMessage(),
+                    "FAIL"
+            );
             takeScreenshot("ERROR_Scenario3");
             throw e;
         }

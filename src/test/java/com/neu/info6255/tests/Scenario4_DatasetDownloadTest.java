@@ -2,6 +2,7 @@ package com.neu.info6255.tests;
 
 import com.neu.info6255.base.BaseTest;
 import com.neu.info6255.pages.DatasetPage;
+import com.neu.info6255.utils.TestReporter;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -75,6 +76,13 @@ public class Scenario4_DatasetDownloadTest extends BaseTest {
 
             takeScreenshot("10_Expected_Failure_Screenshot");
 
+            TestReporter.addResult(
+                    "Scenario 4: Download Dataset (Negative Test)",
+                    "Dataset download should FAIL (access restricted)",
+                    failureReason,
+                    "FAIL"
+            );
+
             System.out.println("\n" + "=".repeat(70));
             System.out.println("✅ NEGATIVE TEST PASSED: Download failed as expected");
             System.out.println("Failure Reason: " + failureReason);
@@ -86,6 +94,13 @@ public class Scenario4_DatasetDownloadTest extends BaseTest {
             failureReason = e.getMessage();
 
             takeScreenshot("11_Negative_Test_Failed");
+
+            TestReporter.addResult(
+                    "Scenario 4: Download Dataset (Negative Test)",
+                    "Dataset download should FAIL (access restricted)",
+                    failureReason,
+                    "FAIL"
+            );
 
             System.out.println("\n" + "=".repeat(70));
             System.out.println("❌ NEGATIVE TEST OUTCOME: " + failureReason);
